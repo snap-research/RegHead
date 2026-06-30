@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RegHead — Non-Humanoid Head Blendshapes via Feed-Forward Registration</title>
+<meta name="description" content="RegHead (ECCV 2026): a large-scale dataset of 33,724 non-humanoid head identities, each rendered across 10 consistent facial expressions.">
+<meta property="og:title" content="RegHead — Non-Humanoid Head Blendshapes via Feed-Forward Registration">
+<meta property="og:description" content="33,724 animal-head identities · 10 expressions each · 337,240 images.">
+<meta property="og:image" content="assets/dataset/id000/open_m_open_e.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;850&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<!-- ======================= HERO ======================= -->
+<header class="hero">
+  <div class="hero-top">
+    <div class="brand"><span class="dot"></span> RegHead</div>
+    <div class="tag">ECCV 2026</div>
+  </div>
+
+  <div class="hero-body">
+    <div class="hero-eyebrow">The RegHead Image Blendshape Dataset</div>
+    <h1 class="hero-title">One identity.<br><span class="grad">Ten expressions.</span></h1>
+    <p class="hero-sub">A large-scale dataset of non-humanoid heads, each rendered across the
+      same ten facial expressions — drag the slider and watch every identity move together.</p>
+
+    <div class="hero-stats">
+      <span><b>33,724</b> identities</span><span class="sep"></span>
+      <span><b>10</b> expressions each</span><span class="sep"></span>
+      <span><b>337,240</b> images</span><span class="sep"></span>
+      <span><b>512</b> &amp; <b>1024</b> px</span>
+    </div>
+
+    <div class="readout">
+      <span class="num"><b id="exprNum">01</b> / 10</span>
+      <span class="name" id="exprName">Open mouth · open eyes</span>
+    </div>
+
+    <div class="strip-shell">
+      <button class="arr arr-l hidden" id="arrL" aria-label="Scroll left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="hero-strip" id="heroGrid"><!-- tiles injected by JS --></div>
+      <button class="arr arr-r" id="arrR" aria-label="Scroll right">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="control">
+      <div class="track-wrap">
+        <input id="exprSlider" class="slider" type="range" min="0" max="9" step="1" value="0"
+               aria-label="Facial expression">
+      </div>
+      <div class="ticks" id="ticks"><!-- ticks injected by JS --></div>
+      <div class="ctl-row">
+        <button class="playbtn" id="playBtn" aria-label="Play or pause">
+          <svg id="playIco" viewBox="0 0 16 16"><path d="M4 3l10 5-10 5z"/></svg>
+          <span class="pl-txt">Play</span>
+        </button>
+        <span class="hint">Drag, click a label, or use ← → keys</span>
+      </div>
+    </div>
+  </div>
+
+  <a href="#paper" class="scroll-cue" aria-label="Scroll to paper">
+    Scroll to the paper
+    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</header>
+
+<!-- ======================= NAV ======================= -->
+<nav class="nav" id="paper">
+  <div class="nav-in">
+    <div class="brand"><span class="dot"></span> RegHead</div>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ======================= TITLE BLOCK ======================= -->
+<div class="wrap">
+  <div class="paper-head">
+    <span class="confbadge">ECCV 2026</span>
+    <h1 class="paper-title">RegHead: Non-Humanoid Head Blendshapes<br>via Feed-Forward Registration</h1>
+    <p class="authors">
+      <a href="https://jluo96.github.io/" target="_blank" rel="noopener">Jiahao Luo</a><sup>1</sup>,
+      <a href="https://haoz19.github.io/" target="_blank" rel="noopener">Hao Zhang</a><sup>2</sup>,
+      <a href="https://windvchen.github.io/" target="_blank" rel="noopener">Jianqi Chen</a><sup>3</sup>,
+      <a href="https://www.linkedin.com/in/yijie-he-503017291/" target="_blank" rel="noopener">Yijie He</a><sup>4</sup>,
+      <a href="https://www.linkedin.com/in/jiaxu-zou/" target="_blank" rel="noopener">Jiaxu Zou</a><sup>4</sup>,
+      <a href="https://www.linkedin.com/in/mvasilkovsky/" target="_blank" rel="noopener">Michael Vasilkovsky</a><sup>4</sup>,
+      <a href="https://www.linkedin.com/in/sokorolev/" target="_blank" rel="noopener">Sergei Korolev</a><sup>4</sup>,<br>
+      <a href="https://stulyakov.com/" target="_blank" rel="noopener">Sergey Tulyakov</a><sup>4</sup>,
+      <a href="https://mightychaos.github.io/" target="_blank" rel="noopener">Chaoyang Wang</a><sup>4</sup>,
+      <a href="https://peterwonka.net/" target="_blank" rel="noopener">Peter Wonka</a><sup>3</sup>,
+      <a href="https://users.soe.ucsc.edu/~davis/" target="_blank" rel="noopener">James Davis</a><sup>1</sup>,
+      <a href="https://jianwang-cmu.github.io/" target="_blank" rel="noopener">Jian Wang</a><sup>4</sup>
+    </p>
+    <p class="affil">
+      <sup>1</sup>UC Santa Cruz &nbsp;·&nbsp; <sup>2</sup>UIUC &nbsp;·&nbsp;
+      <sup>3</sup>KAUST &nbsp;·&nbsp; <sup>4</sup>Snap Inc.
+    </p>
+    <div class="btns">
+      <a class="btn grad" href="#">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        Paper</a>
+      <a class="btn alt" href="#">arXiv</a>
+      <a class="btn" href="https://github.com/snap-research/RegHead">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 015 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0012 2z"/></svg>
+        Code</a>
+      <a class="btn" href="https://github.com/snap-research/RegHead">Dataset</a>
+      <a class="btn alt" href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= ABSTRACT (placeholder) ======================= -->
+<section class="section" id="abstract">
+  <div class="wrap">
+    <div class="kicker">Abstract</div>
+    <h2 class="h">Overview </h2>
+    <p class="lead" style="margin-top:14px;max-width:none;text-align:justify">
+      We present RegHead, a framework for constructing semantic blendshape sets for animatable non-humanoid head avatars. With a fixed expression vocabulary, semantic blendshapes provide a low-dimensional and interpretable animation interface and support cross-identity retargeting. Building such blendshape sets remains expensive because (i) expression-consistent supervision is scarce, (ii) generated 4D assets typically lack correspondence, and (iii) facial motion is highly localized. We propose (1) a large-scale dataset of non-humanoid identities paired with a shared expression vocabulary, obtained by expanding a small artist-rigged library via fine-tuned image editing; (2) a dense stochastic anchor motion representation tailored to localized facial deformations; and (3) a fast feed-forward registration model that converts unregistered expression meshes into a corresponded blendshape basis by predicting anchor-based deformations from the neutral shape. Experiments show that our approach produces higher-fidelity expression meshes than baselines, while running orders of magnitude faster than optimization. We further demonstrate real-time retargeting from human face tracking signals to non-humanoid characters, capturing both head pose and localized facial motions.
+    </p>
+  </div>
+</section>
+
+<!-- ======================= DATASET (the emphasis) ======================= -->
+<section class="section section-soft" id="dataset">
+  <div class="wrap">
+    <div class="kicker">The Dataset</div>
+    <h2 class="h">An expression-aligned population of non-humanoid heads</h2>
+    <p class="lead" style="margin-top:12px">
+      Each identity is one distinct animal head rendered across <b>10 fixed facial expressions</b>.
+      Because every identity shares the same expression vocabulary, the dataset provides aligned
+      cross-expression pairs for a fixed identity — exactly the supervision needed for blendshape
+      learning, expression editing, and identity-preserving animation.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><div class="v">33,724</div><div class="l">Unique identities</div></div>
+      <div class="stat"><div class="v">10</div><div class="l">Expressions per identity (100% complete)</div></div>
+      <div class="stat"><div class="v">337,240</div><div class="l">Total images</div></div>
+      <div class="stat"><div class="v">2</div><div class="l">Resolutions · 512 &amp; 1024 px</div></div>
+    </div>
+
+    <!-- the 10 expressions, one identity -->
+    <div class="strip-title">
+      <h3 style="margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em">The 10 expressions, one identity</h3>
+      <span class="note" style="margin:0">Same expression vocabulary for all 33,724 identities</span>
+    </div>
+    <div class="strip">
+      <figure><img src="assets/dataset/id000/open_m_open_e.jpg"   alt="open mouth open eyes"><figcaption>open_m_open_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/halfo_m_o_e.jpg"     alt="half-open mouth"><figcaption>halfo_m_o_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_o_e.jpg"      alt="closed mouth open eyes"><figcaption>close_m_o_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_0_75o_e.jpg"  alt="eyes 75% open"><figcaption>close_m_0_75o_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_halfo_e.jpg"  alt="eyes 50% open"><figcaption>close_m_halfo_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_0_25o_e.jpg"  alt="eyes 25% open"><figcaption>close_m_0_25o_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_close_e.jpg"  alt="eyes closed"><figcaption>close_m_close_e</figcaption></figure>
+      <figure><img src="assets/dataset/id000/close_m_smile.jpg"    alt="smile"><figcaption>close_m_smile</figcaption></figure>
+      <figure><img src="assets/dataset/id000/raise_eyebrows.jpg"   alt="raise eyebrows"><figcaption>raise_eyebrows</figcaption></figure>
+      <figure><img src="assets/dataset/id000/frown.jpg"            alt="frown"><figcaption>frown</figcaption></figure>
+    </div>
+
+    <!-- distribution + composition -->
+    <div class="cols">
+      <div>
+        <h3 style="margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.01em">Composition &amp; diversity</h3>
+        <p class="note" style="margin-top:6px">
+          Identities are sampled as combinations of an <b>animal</b> (~270 species), a
+          <b>render style</b> (4), a <b>facial feature</b> (~38), and <b>1–2 accessories</b> (~57) —
+          producing broad visual diversity across the population. Every image is model-generated;
+          no real photographs are included.
+        </p>
+        <p class="note">
+          ~59% of identities are newly generated for this release; the remaining ~41% come from an
+          earlier batch using the same expression vocabulary and models.
+        </p>
+      </div>
+      <div>
+        <h4 style="margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:.02em;color:var(--muted)">RENDER-STYLE DISTRIBUTION</h4>
+        <div class="bars">
+          <div class="bar-row"><span class="lab">Video Game NPC</span><span class="bar-track"><span class="bar-fill" style="width:25.5%"></span></span><span class="pct">25.5%</span></div>
+          <div class="bar-row"><span class="lab">Plastic Toy Render</span><span class="bar-track"><span class="bar-fill" style="width:25.0%"></span></span><span class="pct">25.0%</span></div>
+          <div class="bar-row"><span class="lab">Photorealistic</span><span class="bar-track"><span class="bar-fill" style="width:25.0%"></span></span><span class="pct">25.0%</span></div>
+          <div class="bar-row"><span class="lab">Computer Animated Film-Style 3D</span><span class="bar-track"><span class="bar-fill" style="width:24.5%"></span></span><span class="pct">24.5%</span></div>
+        </div>
+        <p class="note">Styles are sampled near-uniformly across the four render looks.</p>
+      </div>
+    </div>
+
+    <!-- generation pipeline -->
+    <h3 style="margin:48px 0 0;font-size:20px;font-weight:800;letter-spacing:-.01em">How it was generated</h3>
+    <p class="note" style="margin-top:6px">A three-stage generative pipeline: create a base head, neutralize it into a clean reference, then edit it into each expression with chained, expression-specific adapters.</p>
+    <div class="pipe">
+      <div class="pstep">
+        <div class="n">1</div><h4>Text → image</h4>
+        <p>A seeded prompt (animal × style × feature × accessories) renders the base identity head.</p>
+        <span class="eng">OpenAI gpt-image-1</span>
+      </div>
+      <div class="pstep">
+        <div class="n">2</div><h4>Neutralize</h4>
+        <p>The base head becomes a clean floating-head reference on a white background — the <code>open_m_open_e</code> frame.</p>
+        <span class="eng">OpenAI image model</span>
+      </div>
+      <div class="pstep">
+        <div class="n">3</div><h4>Expression edits</h4>
+        <p>LoRA adapters chain-edit the reference into the remaining 9 expressions, keeping identity fixed.</p>
+        <span class="eng">Qwen-Image + LoRA</span>
+      </div>
+    </div>
+
+    <!-- two releases comparison -->
+    <h3 style="margin:48px 0 0;font-size:20px;font-weight:800;letter-spacing:-.01em">Two releases — same content, two resolutions</h3>
+    <div class="table-card">
+      <table class="cmp">
+        <thead><tr><th>&nbsp;</th><th>512 release</th><th>1024 release</th></tr></thead>
+        <tbody>
+          <tr><td>Resolution</td><td class="hi">512 × 512</td><td class="hi">1024 × 1024</td></tr>
+          <tr><td>Image format</td><td>JPEG q95</td><td>JPEG q95</td></tr>
+          <tr><td>Identities</td><td>33,724</td><td>33,724</td></tr>
+          <tr><td>Images</td><td>337,240</td><td>337,240</td></tr>
+          <tr><td>Shards (.tar)</td><td>11</td><td>34</td></tr>
+          <tr><td>Total size</td><td class="hi">18.96 GiB</td><td class="hi">58.79 GiB</td></tr>
+          <tr><td>Best for</td><td>fast prototyping, light training</td><td>high-res training &amp; evaluation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Identical identity sets, expressions, metadata, and per-sample layout — only the resolution and size differ. Train on 512, scale to 1024 without changing any data-loading code.</p>
+
+    <!-- usage -->
+    <h3 style="margin:48px 0 0;font-size:20px;font-weight:800;letter-spacing:-.01em">Load in one shard, one sample = one identity</h3>
+    <div class="code"><span class="c"># packaged as WebDataset .tar shards — pip install webdataset pillow</span>
+<span class="k">import</span> glob, json, webdataset <span class="k">as</span> wds
+
+urls = sorted(glob.glob(<span class="s">"reghead_download/data/*.tar"</span>))
+EXPR = [<span class="s">"open_m_open_e"</span>, <span class="s">"halfo_m_o_e"</span>, <span class="s">"close_m_o_e"</span>, <span class="s">"close_m_halfo_e"</span>,
+        <span class="s">"close_m_0_25o_e"</span>, <span class="s">"close_m_0_75o_e"</span>, <span class="s">"close_m_close_e"</span>,
+        <span class="s">"close_m_smile"</span>, <span class="s">"raise_eyebrows"</span>, <span class="s">"frown"</span>]
+
+<span class="k">def</span> parse(s):
+    meta = json.loads(s[<span class="s">"json"</span>]) <span class="k">if</span> isinstance(s[<span class="s">"json"</span>], (bytes, bytearray)) <span class="k">else</span> s[<span class="s">"json"</span>]
+    imgs = {e: s[e + <span class="s">".jpg"</span>] <span class="k">for</span> e <span class="k">in</span> EXPR <span class="k">if</span> e + <span class="s">".jpg"</span> <span class="k">in</span> s}
+    <span class="k">return</span> {<span class="s">"identity"</span>: meta[<span class="s">"identity"</span>], <span class="s">"images"</span>: imgs}
+
+ds = wds.WebDataset(urls).decode(<span class="s">"pil"</span>).map(parse)   <span class="c"># imgs are PIL.Image</span></div>
+  </div>
+</section>
+
+<!-- ======================= METHOD (placeholder) ======================= -->
+<section class="section" id="method">
+  <div class="wrap">
+    <div class="kicker">Method</div>
+    <h2 class="h">Feed-forward registration</h2>
+
+    <figure class="figure" style="margin-top:26px">
+      <img src="assets/teaser_method_1.png" alt="RegHead overview: from 2D observations to blendshapes to real-time retargeting">
+      <figcaption><b class="fnum">Figure 1.</b> RegHead converts semantically labeled expression observations into a
+      corresponded semantic blendshape set for non-humanoid heads in a single feed-forward pass. The resulting
+      blendshapes support real-time animation and retargeting via a fixed expression vocabulary.</figcaption>
+    </figure>
+
+    <figure class="figure">
+      <img src="assets/teaser_method_2.png" alt="Feed-forward registration architecture: global matcher, local matcher, and anchor driver">
+      <figcaption><b class="fnum">Figure 2.</b> The goal of our feed-forward registration is to learn a deformation
+      function $f_\theta$ that deforms the neutral shape to multiple target expressions. We split all expressions of
+      any identity into a neutral expression and target expressions, and obtain anchor and voxel tokens as described
+      in the motion-representation section. A global matcher first predicts a coarse deformation $\mathcal{T}_k^{t,0}$
+      to bring anchors into a better local matching basin; a structured local matcher then refines fine-grained
+      localized motion using validity-aware voxel neighborhoods. As marked in orange, we show two coarse-deformed
+      anchors $\mathbf{a}_k^{t}$ (green and magenta) matching to their neighborhood tokens
+      $\{\mathbf{n}_{km}^t\}_{m=1}^{M}$ shown at the bottom. Finally, the local matcher predicts the per-anchor
+      transformation that drives the neutral query.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ======================= RESULTS (placeholder) ======================= -->
+<section class="section section-soft" id="results">
+  <div class="wrap">
+    <div class="kicker">Results</div>
+    <h2 class="h">Qualitative results</h2>
+    <p class="lead" style="margin-top:12px">All results below are produced by <b>RegHead</b>. Each clip pairs the input with our output (baselines cropped out). Videos autoplay, muted, when scrolled into view.</p>
+
+    <h3 style="margin:38px 0 4px;font-size:21px;font-weight:800;letter-spacing:-.01em">Neutral &rarr; target interpolation</h3>
+    <p class="note" style="margin-top:0">Linear interpolation in the registered blendshape basis, morphing the neutral shape toward each target expression.</p>
+    <div class="vid-list">
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/interp_mouth_closed.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Neutral &rarr; Closed mouth, open eyes.</b> Each identity is shown as an <i>input</i> / <i>ours</i> pair, left to right: African Lion, Bald Eagle, Chihuahua Dog.</figcaption>
+      </figure>
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/interp_closed_eye.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Neutral &rarr; Closed mouth, closed eyes.</b> Each identity is shown as an <i>input</i> / <i>ours</i> pair, left to right: Alligator, Barracuda, Beaver.</figcaption>
+      </figure>
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/interp_smile.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Neutral &rarr; Smile.</b> Each identity is shown as an <i>input</i> / <i>ours</i> pair, left to right: Lynx, Mongoose, Parrot.</figcaption>
+      </figure>
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/interp_frown.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Neutral &rarr; Frown.</b> Each identity is shown as an <i>input</i> / <i>ours</i> pair, left to right: Mouse, Orangutan, Pelican.</figcaption>
+      </figure>
+    </div>
+
+    <h3 style="margin:48px 0 4px;font-size:21px;font-weight:800;letter-spacing:-.01em">Retargeting</h3>
+    <p class="note" style="margin-top:0">Real-time retargeting from a human face-tracking signal to non-humanoid characters, transferring head pose and localized facial motion.</p>
+    <div class="vid-list">
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/retarget_input1.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Input 1.</b> Leftmost is the driving human performance; the remaining three are our real-time retargeting to Maine Coon, Mole, Prairie DogCockatoo.</figcaption>
+      </figure>
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/retarget_input2.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Input 2.</b> Leftmost is the driving human performance; the remaining three are our real-time retargeting to Maltese Dog, Mouse, Musk Ox.</figcaption>
+      </figure>
+      <figure class="vid">
+        <video class="lazyvid" data-src="assets/supp/processed/retarget_input3.mp4" muted loop playsinline preload="none"></video>
+        <figcaption><b>Input 3.</b> Leftmost is the driving human performance; the remaining three are our real-time retargeting to Lemur, Mouse, Poodle.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BIBTEX ======================= -->
+<section class="section" id="bibtex">
+  <div class="wrap">
+    <div class="kicker">Citation</div>
+    <h2 class="h">BibTeX</h2>
+    <div class="bib" style="margin-top:20px">@inproceedings{reghead2026,
+  title     = {RegHead: Non-Humanoid Head Blendshapes via Feed-Forward Registration},
+  author    = {Author, One and Author, Two and Author, Three},
+  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
+  year      = {2026}
+}</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>RegHead — Non-Humanoid Head Blendshapes via Feed-Forward Registration · Snap Inc.</div>
+    <div class="lic">Dataset released under the Snap Inc. Non-Commercial License (research use only).
+      Imagery generated with the OpenAI GPT image model and the Qwen-Image editing model (Apache-2.0).</div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

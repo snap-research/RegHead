@@ -1,0 +1,7 @@
+# source PDFs (rasterized PNGs are committed instead)
+assets/*.pdf
+# raw supplemental grids + helper files — only the cropped clips in assets/supp/processed/ are used
+assets/supp/files/
+assets/supp/animations.html
+# misc
+**/.DS_Store

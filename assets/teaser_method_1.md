@@ -1,0 +1,1 @@
+RegHead converts semantically labeled expression observations into a corresponded semantic blendshape set for non-humanoid heads in a single feed-forward pass. The resulting blendshapes support real-time animation and retargeting via a fixed expression vocabulary.
